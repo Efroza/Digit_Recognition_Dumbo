@@ -10,9 +10,13 @@ width, height = 800, 600
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Simple Drawing App")
 
+num = 0
+
 # Set up colors
 black = (0, 0, 0)
 white = (255, 255, 255)
+
+tick = 0
 
 # Set up drawing variables
 drawing = False
@@ -28,6 +32,8 @@ launch()
 def lerp(start, end, alpha):
     return int((1 - alpha) * start + alpha * end)
 
+font = pygame.font.Font(None, 36)  
+
 # Main game loop
 while True:
     for event in pygame.event.get():
@@ -41,10 +47,12 @@ while True:
             if event.button == 1:
                 drawing = False
                 pygame.image.save(screen, "drawing.png")
-                recognize_digits()
+                num = recognize_digits()
+                print(num)
                 last_pos = None
         elif event.type == pygame.MOUSEMOTION:
             if drawing:
+                tick = 1
                 if last_pos:
                     # Interpolate between the last position and the current position
                     for alpha in range(0, 101, 5):
@@ -58,9 +66,10 @@ while True:
     pygame.display.flip()
 
     pygame.time.Clock().tick(230)
-    if drawing == False:
+    if drawing == False and tick == 1:
+        print("clean")
+        tick = 0
         screen.fill(white)
-
-        # Limit frames per second
-
-    # Limit frames per second
+        number_text = font.render(str(num), True, black)  # Replace "42" with your desired number
+        text_rect = number_text.get_rect(center=(width // 2, height - 20))  # Adjust the Y-coordinate as needed
+        screen.blit(number_text, text_rect)

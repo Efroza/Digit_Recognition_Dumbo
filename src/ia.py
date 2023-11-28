@@ -111,16 +111,18 @@ def load_and_recognize_digit(image_path):
     preprocessed_image = preprocess_opencv_image(image)
     predicted_digit = recognize_digit(preprocessed_image)
 
+    return predicted_digit
+
     # Display the predicted digit
-    cv2.putText(image, f"Predicted Digit: {predicted_digit}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    cv2.imshow("Recognized Digit", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.putText(image, f"Predicted Digit: {predicted_digit}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    # cv2.imshow("Recognized Digit", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 def launch():
     train_model(model, optimizer, criterion, train_loader, val_loader)
 
     # Recognize digits using the trained model
 def recognize_digits():
-    load_and_recognize_digit('drawing.png')
+    return load_and_recognize_digit('drawing.png')
 
