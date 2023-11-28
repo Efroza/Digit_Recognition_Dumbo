@@ -81,7 +81,6 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
 # Loading and recognizing digits
 def load_and_recognize_digit(image_path):
     # Load the trained CNN model
-    model = SimpleCNN()
     model.load_state_dict(torch.load('mnist_cnn_model.pth'))
     model.eval()
 
@@ -113,16 +112,8 @@ def load_and_recognize_digit(image_path):
 
     return predicted_digit
 
-    # Display the predicted digit
-    # cv2.putText(image, f"Predicted Digit: {predicted_digit}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    # cv2.imshow("Recognized Digit", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
 def launch():
-    train_model(model, optimizer, criterion, train_loader, val_loader)
+    train_model(model, optimizer, criterion, train_loader, val_loader, num_epochs=5)
 
-    # Recognize digits using the trained model
 def recognize_digits():
-    return load_and_recognize_digit('drawing.png')
-
+    return load_and_recognize_digit("drawing.png")
