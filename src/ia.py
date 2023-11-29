@@ -7,6 +7,7 @@ from torchvision import datasets
 import cv2
 import numpy as np
 from PIL import Image
+import os
 
 # Define transformations to apply to the images
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
@@ -45,6 +46,9 @@ criterion = nn.CrossEntropyLoss()
 
 # Training the model
 def train_model(model, optimizer, criterion, train_loader, val_loader, num_epochs=5):
+    if "mnist_cnn_model.pth" in os.listdir():
+        print("Model already trained!")
+        return
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
