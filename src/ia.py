@@ -90,6 +90,8 @@ def load_and_recognize_digit(image_path):
 
     # Preprocess function for OpenCV image
     def preprocess_opencv_image(img):
+        img = img[0:480, 0:800]
+        cv2.imwrite("drawing.png", img)
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img_resized = cv2.resize(img_gray, (28, 28), interpolation=cv2.INTER_AREA)
         img_normalized = img_resized / 255.0
