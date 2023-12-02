@@ -9,10 +9,19 @@ import numpy as np
 from PIL import Image
 import os
 
-# Define transformations to apply to the images
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+class_weights = [2.0 if i in [0, 2, 6, 8] else 1.0 for i in range(10)]
+class_weights = torch.FloatTensor(class_weights)
+criterion = nn.CrossEntropyLoss(weight=class_weights)
 
-# Download and load the MNIST training and validation datasets
+# Define transformations to apply to the images with data augmentation
+transform = transforms.Compose([
+    transforms.RandomRotation(10),
+    transforms.RandomAffine(0, translate=(0.1, 0.1)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+
+# Download and load the MNIST training and validation datasets with augmentation
 train_dataset = datasets.MNIST('data/', train=True, transform=transform, download=True)
 val_dataset = datasets.MNIST('data/', train=False, transform=transform, download=True)
 
@@ -20,35 +29,39 @@ val_dataset = datasets.MNIST('data/', train=False, transform=transform, download
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=64)
 
-# Define CNN architecture
-class SimpleCNN(nn.Module):
+class ComplexCNN(nn.Module):
     def __init__(self):
-        super(SimpleCNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, 3, 1)
-        self.conv2 = nn.Conv2d(16, 32, 3, 1)
-        self.fc1 = nn.Linear(32 * 5 * 5, 128)
-        self.fc2 = nn.Linear(128, 10)
+        super(ComplexCNN, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        self.fc1 = nn.Linear(256 * 1 * 1, 512)
+        self.fc2 = nn.Linear(512, 128)
+        self.fc3 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = nn.functional.relu(self.conv1(x))
-        x = nn.functional.max_pool2d(x, 2, 2)
-        x = nn.functional.relu(self.conv2(x))
-        x = nn.functional.max_pool2d(x, 2, 2)
-        x = x.view(-1, 32 * 5 * 5)
+        x = nn.functional.relu(nn.functional.max_pool2d(self.conv1(x), 2))
+        x = nn.functional.relu(nn.functional.max_pool2d(self.conv2(x), 2))
+        x = nn.functional.relu(nn.functional.max_pool2d(self.conv3(x), 2))
+        x = nn.functional.relu(nn.functional.max_pool2d(self.conv4(x), 2))
+        x = x.view(-1, 256 * 1 * 1)
         x = nn.functional.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = nn.functional.relu(self.fc2(x))
+        x = self.fc3(x)
+        
         return nn.functional.log_softmax(x, dim=1)
 
 # Initialize the model, optimizer, and loss function
-model = SimpleCNN()
+model = ComplexCNN()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
 # Training the model
 def train_model(model, optimizer, criterion, train_loader, val_loader, num_epochs=5):
-    if "mnist_cnn_model.pth" in os.listdir():
-        print("Model already trained!")
-        return
+    
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -73,6 +86,9 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
+                
+        # Scheduler step based on validation loss
+        scheduler.step(val_loss)
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], "
               f"Loss: {running_loss / len(train_loader):.4f}, "
@@ -80,12 +96,12 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
               f"Accuracy: {(100 * correct / total):.2f}%")
 
     # Save the trained model
-    torch.save(model.state_dict(), 'mnist_cnn_model.pth')
+    torch.save(model.state_dict(), 'mnist_complex_cnn_model.pth')
 
 # Loading and recognizing digits
 def load_and_recognize_digit(image_path):
     # Load the trained CNN model
-    model.load_state_dict(torch.load('mnist_cnn_model.pth'))
+    model.load_state_dict(torch.load('mnist_complex_cnn_model.pth'))
     model.eval()
 
     # Preprocess function for OpenCV image
@@ -123,3 +139,6 @@ def launch():
 
 def recognize_digits():
     return load_and_recognize_digit("drawing.png")
+
+if __name__ == "__main__":
+    launch()

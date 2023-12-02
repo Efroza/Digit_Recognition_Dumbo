@@ -8,7 +8,7 @@ pygame.init()
 # Set up display
 width, height = 800, 600
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Simple Drawing App")
+pygame.display.set_caption("Digit recognition app")
 
 # varible to store the number recognized
 num = None
@@ -38,7 +38,7 @@ circle = pygame.Rect(15, 15, 30, 30)  # x, y, width, height
 
 # Set up drawing variables
 drawing = False
-radius = 15
+radius = 13
 color = white
 
 #fill the screen in black
@@ -70,7 +70,12 @@ def is_on_buttons(pos):
 
 # Main game loop
 last_pos = None
-launch()
+# Load the pre-trained model if it exists, otherwise train the model
+if os.path.isfile('mnist_complex_cnn_model.pth'):
+    model_loaded = True
+else:
+    model_loaded = False
+    launch()
 
 # Main game loop
 while True:
