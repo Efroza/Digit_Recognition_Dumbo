@@ -1,3 +1,4 @@
+# Import necessary libraries
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,11 +10,12 @@ import numpy as np
 from PIL import Image
 import os
 
+# Define class weights for the CrossEntropyLoss
 class_weights = [2.0 if i in [0, 2, 6, 8] else 1.0 for i in range(10)]
 class_weights = torch.FloatTensor(class_weights)
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 
-# Define transformations to apply to the images with data augmentation
+# Define transformations for data augmentation
 transform = transforms.Compose([
     transforms.RandomRotation(10),
     transforms.RandomAffine(0, translate=(0.1, 0.1)),
@@ -29,17 +31,22 @@ val_dataset = datasets.MNIST('data/', train=False, transform=transform, download
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=64)
 
+# Define the CNN architecture
 class ComplexCNN(nn.Module):
+    # Initialize the layers
     def __init__(self):
         super(ComplexCNN, self).__init__()
+        # Convolutional layers
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        # Fully connected layers
         self.fc1 = nn.Linear(256 * 1 * 1, 512)
         self.fc2 = nn.Linear(512, 128)
         self.fc3 = nn.Linear(128, 10)
 
+    # Define the forward pass through the network
     def forward(self, x):
         x = nn.functional.relu(nn.functional.max_pool2d(self.conv1(x), 2))
         x = nn.functional.relu(nn.functional.max_pool2d(self.conv2(x), 2))
@@ -57,14 +64,15 @@ model = ComplexCNN()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
-# Training the model
+# Function to train the model
 def train_model(model, optimizer, criterion, train_loader, val_loader, num_epochs=5):
-    
+    # Scheduler to adjust learning rate based on validation loss
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
 
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
+        # Training loop
         for data, labels in train_loader:
             optimizer.zero_grad()
             outputs = model(data)
@@ -73,7 +81,7 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
             optimizer.step()
             running_loss += loss.item()
 
-        # Validation
+        # Validation loop
         model.eval()
         val_loss = 0.0
         correct = 0
@@ -90,6 +98,7 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
         # Scheduler step based on validation loss
         scheduler.step(val_loss)
 
+        # Print epoch statistics
         print(f"Epoch [{epoch + 1}/{num_epochs}], "
               f"Loss: {running_loss / len(train_loader):.4f}, "
               f"Val Loss: {val_loss / len(val_loader):.4f}, "
@@ -98,7 +107,7 @@ def train_model(model, optimizer, criterion, train_loader, val_loader, num_epoch
     # Save the trained model
     torch.save(model.state_dict(), 'mnist_complex_cnn_model.pth')
 
-# Loading and recognizing digits
+# Function to load an image and recognize the digit using the trained CNN model
 def load_and_recognize_digit(image_path):
     # Load the trained CNN model
     model.load_state_dict(torch.load('mnist_complex_cnn_model.pth'))
@@ -106,6 +115,7 @@ def load_and_recognize_digit(image_path):
 
     # Preprocess function for OpenCV image
     def preprocess_opencv_image(img):
+        # Image preprocessing steps
         img = img[0:480, 0:800]
         cv2.imwrite("drawing.png", img)
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -134,11 +144,14 @@ def load_and_recognize_digit(image_path):
 
     return predicted_digit
 
+# Function to start training the model
 def launch():
     train_model(model, optimizer, criterion, train_loader, val_loader, num_epochs=5)
 
+# Function to recognize digits using the Pygame interface
 def recognize_digits():
     return load_and_recognize_digit("drawing.png")
 
+# Entry point of the program
 if __name__ == "__main__":
-    launch()
+    launch()  # Start training the model

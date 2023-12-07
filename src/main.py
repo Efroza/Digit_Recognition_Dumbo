@@ -44,12 +44,13 @@ color = white
 #fill the screen in black
 screen.fill(black)
 
-# Linear interpolation function
+# Function for linear interpolation between two points
 def lerp(start, end, alpha):
     return int((1 - alpha) * start + alpha * end)
 
-font = pygame.font.Font(None, 36)  
+font = pygame.font.Font(None, 36)  # Font for text rendering
 
+# Function to draw interpolated circles
 def draw_circle(start, end):
     for alpha in range(0, 101, 5):
         x = lerp(start[0], end[0], alpha / 100)
@@ -68,17 +69,17 @@ def is_on_buttons(pos):
     else:
         return False
 
-# Main game loop
 last_pos = None
 # Load the pre-trained model if it exists, otherwise train the model
 if os.path.isfile('mnist_complex_cnn_model.pth'):
     model_loaded = True
 else:
     model_loaded = False
-    launch()
+    launch() # Train the model
 
 # Main game loop
 while True:
+    # Check for events and handle them
     for event in pygame.event.get():
         # Quit game
         if event.type == pygame.QUIT:
@@ -89,17 +90,17 @@ while True:
             if event.button == 1:
                 if is_mouse_over_button(event.pos, button_rect):
                     pygame.image.save(screen, "drawing.png")
-                    num = recognize_digits()
+                    num = recognize_digits() # Recognize digits
                     screen.fill(black)
                     last_pos = None
                 if is_mouse_over_button(event.pos, button_rect2):
-                    screen.fill(black)
+                    screen.fill(black) # Reset screen
                     num = None
                     last_pos = None
                 if is_mouse_over_button(event.pos, circle):
                     pygame.quit()
                     sys.exit()
-        # xondition to check if the left mouse button is UP
+        # condition to check if the left mouse button is UP
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             drawing = False
             last_pos = None
@@ -116,7 +117,7 @@ while True:
                 pygame.draw.circle(screen, color, event.pos, radius)
             last_pos = event.pos
 
-    # Update
+    # Update the display
     pygame.display.flip()
     
     # Draw rect
@@ -131,6 +132,7 @@ while True:
     #draw Quit button
     pygame.draw.circle(screen, red, (30, 30), 20)
 
+    # Display recognized digits if available
     if num != None:
         text = font.render(str(num), True, white)
         text_rect = text.get_rect(center=rect.center)
@@ -152,7 +154,7 @@ while True:
     text_rect3 = button_text3.get_rect(center=(30, 30))
     screen.blit(button_text3, text_rect3)
 
-
+    # Control frame rate
     pygame.time.Clock().tick(230)
 
         
